@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-frontend
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: jenkins-nginx
+    tier: jenkins-frontend
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-nginx
+      tier: jenkins-frontend
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: jenkins-nginx
+        tier: jenkins-frontend
+        track: stable
+    spec:
+      containers:
+        - name: jenkins-frontend
+          image: xaq03061/nginx
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              readOnly: true
+              name: jenkins-nginx-conf
+      volumes:
+        - name: jenkins-nginx-conf
+          configMap:
+            name: jenkins-nginx-conf
+            items:
+              - key: nginx.conf
+                path: nginx.conf
